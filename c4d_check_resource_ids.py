@@ -17,14 +17,25 @@ import os
 import logging
 import argparse
 
-logging.basicConfig(format="%(levelname)s: %(message)s", level=logging.INFO)
+
+# Script metadata
+SCRIPT_TITLE = "C4D Resource ID Checker"
+SCRIPT_VERSION = "1.1"
+SCRIPT_CREDITS = "2020 by Frank Willeke"
+
+# Script settings
+LOGLEVEL = logging.INFO
+MIN_SUGGEST_IF_EMPTY = 1000 # Minimum suggested ID value if header does not contain any IDs yet
+
+# Set up logger
+logging.basicConfig(format="%(levelname)s: %(message)s", level=LOGLEVEL)
 log = logging.getLogger("CheckResourceIDs")
 
 
-def suggest_new_ids(valueNameDict):
+def suggest_new_ids(valueNameDict, minVal):
     """Suggest new resource IDs that can safely be added to the header
     """
-    def get_suggested_value_list(valueNameDict):
+    def get_suggested_value_list(valueNameDict, minVal):
         """Create list of free ID values that can be suggested
         """
         sortedIdValues = sorted(valueNameDict.keys())
@@ -47,20 +58,22 @@ def suggest_new_ids(valueNameDict):
             suggestedValues.append(gap + 1)
         
         # Suggest value after largest value
-        suggestedValues.append(largestValue + 1)
+        suggestedValues.append(max(largestValue + 1, minVal))
 
         return suggestedValues
 
-    suggestedValues = get_suggested_value_list(valueNameDict)
+    suggestedValues = get_suggested_value_list(valueNameDict, minVal)
 
     log.info("Suggested free ID values:")
     for suggestionIndex, suggestion in enumerate(suggestedValues):
-        if suggestionIndex == len(suggestedValues) - 1:
-            reasonStr = "after largest ID"
+        if len(valueNameDict) > 0:
+            if suggestionIndex == len(suggestedValues) - 1:
+                reasonStr = "after largest ID"
+            else:
+                reasonStr = "based on gap in ID range"
         else:
-            reasonStr = "based on gap in ID range"
+            reasonStr = "no IDs defined in header"
         log.info("\t" + str(suggestion) + " (" + reasonStr + ")")
-    print("")
 
 
 def check_unique_resource_ids(valueNameDict):
@@ -76,7 +89,10 @@ def check_unique_resource_ids(valueNameDict):
             nothingFound = False
     
     if nothingFound:
-        log.info("All IDs are unique")
+        if len(valueNameDict) > 0:
+            log.info("All IDs are unique.")
+        else:
+            log.info("No IDs defined in header.")
 
 
 def associate_values_to_names(lines):
@@ -151,47 +167,56 @@ def parse_c4d_resource_header(file, minval):
 
 
 def main():
-    # Arguments
+    print(SCRIPT_TITLE + " " + SCRIPT_VERSION)
+    print(SCRIPT_CREDITS)
+    # Set up arguments
     parser = argparse.ArgumentParser(description="Checks the Cinema 4D resource ID values defined in one or multiple .h files for uniqueness, and suggests new ID values that could be safely used.")
     parser.add_argument("path", metavar="PATH", type=str, help="Path to a header file or a folder with multiple header files to check")
     parser.add_argument("--minval", metavar="MINVAL", type=int, default=100, help="Minimum ID value. Only IDs with this value or greater are checked.")
+
+    # Get arguments
     args = parser.parse_args()
+    path = args.path
+    minVal = args.minval
+    log.debug("Path: " + path)
+    log.debug("minVal: " + str(minVal))
+    print("")
 
     # Check path
-    if not os.path.exists(args.path):
-        log.error("Path '" + args.path + "' does not exist!")
+    if not os.path.exists(path):
+        log.error("Path '" + path + "' does not exist!")
         return
 
-    if os.path.isdir(args.path):
+    if os.path.isdir(path):
         # Iterate files in a directory
-        log.info("Iterating '" + args.path + "'...")
+        log.info("Iterating '" + path + "'...")
         print("")
-        for filename in os.listdir(args.path):
+        for filename in os.listdir(path):
             if os.path.splitext(filename)[1].lower() == ".h":
-                filename = os.path.join(args.path, filename)
+                # Process header file
+                filename = os.path.join(path, filename)
                 log.info("Parsing '" + filename + "'...")
-                lines = parse_c4d_resource_header(filename, args.minval)
+                lines = parse_c4d_resource_header(filename, minVal)
                 log.debug(str(len(lines)) + " functional lines found.")
                 valueNameDict = associate_values_to_names(lines)
                 check_unique_resource_ids(valueNameDict)
-                print("")
-                suggest_new_ids(valueNameDict)
+                suggest_new_ids(valueNameDict, max(minVal, MIN_SUGGEST_IF_EMPTY))
                 print("")
     else:
         # Check extension
-        if not os.path.splitext(args.path)[1].lower() == ".h":
-            log.error("File '" + args.path + "' is not a .h file!")
+        if not os.path.splitext(path)[1].lower() == ".h":
+            log.error("File '" + path + "' is not a .h file!")
             return
 
         # Parse single header file
-        log.info("Parsing " + args.path + "...")
-        lines = parse_c4d_resource_header(args.path, args.minval)
+        log.info("Parsing " + path + "...")
+        lines = parse_c4d_resource_header(path, minVal)
         log.info(str(len(lines)) + " functional lines found.")
         
-        # Check header file
+        # Process header file
         valueNameDict = associate_values_to_names(lines)
         check_unique_resource_ids(valueNameDict)
-        suggest_new_ids(valueNameDict)
+        suggest_new_ids(valueNameDict, max(minVal, MIN_SUGGEST_IF_EMPTY))
 
 
 if __name__ == "__main__":
