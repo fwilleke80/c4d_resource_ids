@@ -206,6 +206,7 @@ def handle_header_file(filename, checkUnique, suggest, showBlocks, minVal):
 def is_header_file(path):
     return os.path.splitext(path)[1].lower() == ".h"
 
+
 def main():
     print(SCRIPT_TITLE + " " + SCRIPT_VERSION)
     print(SCRIPT_CREDITS)
@@ -237,6 +238,7 @@ def main():
         # If none of the three actions were chosen by the user, just to the uniqueness check
         checkUnique = True
 
+    # List actions to do
     actionList = ["analyzeHeader"]
     if checkUnique:
         actionList.append("checkUnique")
@@ -252,6 +254,7 @@ def main():
         log.error("Path '" + path + "' does not exist!")
         return
 
+    # Process directory or single file
     if os.path.isdir(path):
         # Iterate files in a directory
         log.info("Iterating '" + path + "'...")
