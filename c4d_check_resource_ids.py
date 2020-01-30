@@ -199,7 +199,7 @@ def main():
     analysisGroup.add_argument("-u", "--checkunique", action="store_true", default=False, help="Check IDs for uniqueness and report shared ID values")
     analysisGroup.add_argument("-s", "--suggest", action="store_true", default=False, help="Suggest free IDs that can be safely added to the header")
     analysisGroup.add_argument("-b", "--showblocks", action="store_true", default=False, help="Show continuous blocks of IDs defined in a header")
-    parser.add_argument("--minval", metavar="V", type=int, default=100, help="Minimum ID value. Only IDs >= this value are parsed.")
+    parser.add_argument("-m", "--minval", metavar="V", type=int, default=1000, help="Minimum ID value. Only IDs >= this value are parsed.")
 
     # Get arguments
     args = parser.parse_args()
