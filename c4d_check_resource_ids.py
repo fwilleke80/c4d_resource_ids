@@ -42,8 +42,9 @@ def show_id_blocks(valueNameDict):
         """
         idValues = sorted(valueNameDict.keys())
         idBlocks = []
-        for _, g in itertools.groupby(idValues, lambda i, x=itertools.count(): i - next(x)):
+        for _, g in itertools.groupby(enumerate(idValues), lambda x:x[0] - x[1]):
             group = map(operator.itemgetter(1), g)
+            group = list(map(int, group))
             idBlocks.append(group)
         return idBlocks
 
