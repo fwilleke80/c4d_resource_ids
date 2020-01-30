@@ -1,5 +1,5 @@
 # c4d\_check\_resource\_ids.py
-A Python 3 script that helps keeping your C4D plugin's resource IDs clean.
+A Python 3 script that helps keeping your C4D plugin's resource IDs clean. It's here to help you developing your description-based Cinema 4D plugins with lots of resource IDs.
 
 ## What's is about?
 Resource IDs for description-based Cinema 4D plugin UIs need to be unique. In case you have several resoure IDs with the same value, you risk e.g. screwing up the user's animation.
