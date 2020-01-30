@@ -50,6 +50,6 @@ You can add a bash function to ~/.bash_profile to make usage easier:
 ```
 # Check resource IDs
 check-res-ids() {
-        python /path/to/script/c4d_check_resource_ids.py "$@"
+        python3 /path/to/script/c4d_check_resource_ids.py "$@"
 }
 ```
