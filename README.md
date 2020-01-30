@@ -1,5 +1,5 @@
 # c4d\_check\_resource\_ids.py
-A Python script that helps keeping your C4D plugin's resource IDs clean.
+A Python 3 script that helps keeping your C4D plugin's resource IDs clean.
 
 ## What's is about?
 Resource IDs for description-based Cinema 4D plugin UIs need to be unique. In case you have several resoure IDs with the same value, you risk e.g. screwing up the user's animation.
@@ -43,3 +43,13 @@ Will process the specified header file and show the continuous ID value blocks
 
 ```python c4d_check_resource_ids.py /Applications/MAXON/Cinema\ 4D\ R21/plugins/some_plugin/res/description --m 10000```  
 Will process all .h files in the specified folder, but only check ID values equal to or larger than 10000.
+
+### Better integration into Bash
+You can add a bash function to ~/.bash_profile to make usage easier:
+
+```
+# Check resource IDs
+check-res-ids() {
+        python /path/to/script/c4d_check_resource_ids.py "$@"
+}
+```
