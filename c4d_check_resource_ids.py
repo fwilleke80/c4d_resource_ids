@@ -16,6 +16,8 @@ Description:
 import os
 import logging
 import argparse
+import operator
+import itertools
 
 
 # Script metadata
@@ -30,6 +32,26 @@ MIN_SUGGEST_IF_EMPTY = 1000 # Minimum suggested ID value if header does not cont
 # Set up logger
 logging.basicConfig(format="%(levelname)s: %(message)s", level=LOGLEVEL)
 log = logging.getLogger("CheckResourceIDs")
+
+
+def show_id_blocks(valueNameDict):
+    """Show list of all continuous ID blocks in the header
+    """
+    def find_id_blocks(valueNameDict):
+        """Identify continuous blocks of IDs, collect them in a list of blocks
+        """
+        idValues = sorted(valueNameDict.keys())
+        idBlocks = []
+        for _, g in itertools.groupby(enumerate(idValues), lambda (i,x):i-x):
+            group = map(operator.itemgetter(1), g)
+            idBlocks.append(group)
+        return idBlocks
+
+    idBlocks = find_id_blocks(valueNameDict)
+    log.info("Continuous ID blocks:")
+    for block in idBlocks:
+        for idIndex, idValue in enumerate(block):
+            log.info(("\t" if idIndex > 0 else "") + str(idValue))
 
 
 def suggest_new_ids(valueNameDict, minVal):
@@ -169,17 +191,42 @@ def parse_c4d_resource_header(file, minval):
 def main():
     print(SCRIPT_TITLE + " " + SCRIPT_VERSION)
     print(SCRIPT_CREDITS)
+    print("")
     # Set up arguments
-    parser = argparse.ArgumentParser(description="Checks the Cinema 4D resource ID values defined in one or multiple .h files for uniqueness, and suggests new ID values that could be safely used.")
+    parser = argparse.ArgumentParser(description="Checks the Cinema 4D resource ID values defined in one or multiple .h files for uniqueness, and suggests new ID values that could be safely used.", epilog="Happy coding!")
     parser.add_argument("path", metavar="PATH", type=str, help="Path to a header file or a folder with multiple header files to check")
-    parser.add_argument("--minval", metavar="MINVAL", type=int, default=100, help="Minimum ID value. Only IDs with this value or greater are checked.")
+    analysisGroup = parser.add_argument_group("Analysis actions", "These are the main actions that can be performed. If you don't choose any of these, --checkunique will be default.")
+    analysisGroup.add_argument("-u", "--checkunique", action="store_true", default=False, help="Check IDs for uniqueness and report shared ID values")
+    analysisGroup.add_argument("-s", "--suggest", action="store_true", default=False, help="Suggest free IDs that can be safely added to the header")
+    analysisGroup.add_argument("-b", "--showblocks", action="store_true", default=False, help="Show continuous blocks of IDs defined in a header")
+    parser.add_argument("--minval", metavar="V", type=int, default=100, help="Minimum ID value. Only IDs >= this value are parsed.")
 
     # Get arguments
     args = parser.parse_args()
     path = args.path
     minVal = args.minval
+    checkUnique = args.checkunique
+    suggest = args.suggest
+    showBlocks = args.showblocks
     log.debug("Path: " + path)
     log.debug("minVal: " + str(minVal))
+    log.debug("checkUnique: " + str(checkUnique))
+    log.debug("suggest: " + str(suggest))
+    log.debug("showBlocks: " + str(showBlocks))
+
+    # Defaults
+    if not checkUnique and not suggest and not showBlocks:
+        # If none of the three actions were chosen by the user, just to the uniqueness check
+        checkUnique = True
+
+    actionList = ["analyzeHeader"]
+    if checkUnique:
+        actionList.append("checkUnique")
+    if suggest:
+        actionList.append("suggestIDs")
+    if showBlocks:
+        actionList.append("showBlocks")
+    log.info("Actions: " + ",".join(actionList))
     print("")
 
     # Check path
@@ -200,7 +247,10 @@ def main():
                 log.debug(str(len(lines)) + " functional lines found.")
                 valueNameDict = associate_values_to_names(lines)
                 check_unique_resource_ids(valueNameDict)
-                suggest_new_ids(valueNameDict, max(minVal, MIN_SUGGEST_IF_EMPTY))
+                if suggest:
+                    suggest_new_ids(valueNameDict, max(minVal, MIN_SUGGEST_IF_EMPTY))
+                if showBlocks:
+                    show_id_blocks(valueNameDict)
                 print("")
     else:
         # Check extension
@@ -216,7 +266,10 @@ def main():
         # Process header file
         valueNameDict = associate_values_to_names(lines)
         check_unique_resource_ids(valueNameDict)
-        suggest_new_ids(valueNameDict, max(minVal, MIN_SUGGEST_IF_EMPTY))
+        if suggest:
+            suggest_new_ids(valueNameDict, max(minVal, MIN_SUGGEST_IF_EMPTY))
+        if showBlocks:
+            show_id_blocks(valueNameDict)
 
 
 if __name__ == "__main__":
