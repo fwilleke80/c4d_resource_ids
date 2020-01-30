@@ -203,6 +203,8 @@ def handle_header_file(filename, checkUnique, suggest, showBlocks, minVal):
     print("")
 
 
+def is_header_file(path):
+    return os.path.splitext(path)[1].lower() == ".h"
 
 def main():
     print(SCRIPT_TITLE + " " + SCRIPT_VERSION)
@@ -255,13 +257,13 @@ def main():
         log.info("Iterating '" + path + "'...")
         print("")
         for filename in os.listdir(path):
-            if os.path.splitext(filename)[1].lower() == ".h":
+            if is_header_file(filename):
                 # Process header file
                 filename = os.path.join(path, filename)
                 handle_header_file(filename, checkUnique, suggest, showBlocks, minVal)
     else:
         # Check extension
-        if not os.path.splitext(path)[1].lower() == ".h":
+        if not is_header_file(path):
             log.error("File '" + path + "' is not a .h file!")
             return
 
