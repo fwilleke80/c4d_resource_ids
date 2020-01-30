@@ -247,7 +247,8 @@ def main():
                 lines = parse_c4d_resource_header(filename, minVal)
                 log.debug(str(len(lines)) + " functional lines found.")
                 valueNameDict = associate_values_to_names(lines)
-                check_unique_resource_ids(valueNameDict)
+                if checkUnique:
+                    check_unique_resource_ids(valueNameDict)
                 if suggest:
                     suggest_new_ids(valueNameDict, max(minVal, MIN_SUGGEST_IF_EMPTY))
                 if showBlocks:
@@ -266,7 +267,8 @@ def main():
         
         # Process header file
         valueNameDict = associate_values_to_names(lines)
-        check_unique_resource_ids(valueNameDict)
+        if checkUnique:
+            check_unique_resource_ids(valueNameDict)
         if suggest:
             suggest_new_ids(valueNameDict, max(minVal, MIN_SUGGEST_IF_EMPTY))
         if showBlocks:
