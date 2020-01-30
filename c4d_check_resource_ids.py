@@ -189,6 +189,21 @@ def parse_c4d_resource_header(file, minval):
         return []
 
 
+def handle_header_file(filename, checkUnique, suggest, showBlocks, minVal):
+    log.info("Parsing '" + filename + "'...")
+    lines = parse_c4d_resource_header(filename, minVal)
+    log.debug(str(len(lines)) + " functional lines found.")
+    valueNameDict = associate_values_to_names(lines)
+    if checkUnique:
+        check_unique_resource_ids(valueNameDict)
+    if suggest:
+        suggest_new_ids(valueNameDict, max(minVal, MIN_SUGGEST_IF_EMPTY))
+    if showBlocks:
+        show_id_blocks(valueNameDict)
+    print("")
+
+
+
 def main():
     print(SCRIPT_TITLE + " " + SCRIPT_VERSION)
     print(SCRIPT_CREDITS)
@@ -243,17 +258,7 @@ def main():
             if os.path.splitext(filename)[1].lower() == ".h":
                 # Process header file
                 filename = os.path.join(path, filename)
-                log.info("Parsing '" + filename + "'...")
-                lines = parse_c4d_resource_header(filename, minVal)
-                log.debug(str(len(lines)) + " functional lines found.")
-                valueNameDict = associate_values_to_names(lines)
-                if checkUnique:
-                    check_unique_resource_ids(valueNameDict)
-                if suggest:
-                    suggest_new_ids(valueNameDict, max(minVal, MIN_SUGGEST_IF_EMPTY))
-                if showBlocks:
-                    show_id_blocks(valueNameDict)
-                print("")
+                handle_header_file(filename, checkUnique, suggest, showBlocks, minVal)
     else:
         # Check extension
         if not os.path.splitext(path)[1].lower() == ".h":
@@ -261,18 +266,7 @@ def main():
             return
 
         # Parse single header file
-        log.info("Parsing " + path + "...")
-        lines = parse_c4d_resource_header(path, minVal)
-        log.info(str(len(lines)) + " functional lines found.")
-        
-        # Process header file
-        valueNameDict = associate_values_to_names(lines)
-        if checkUnique:
-            check_unique_resource_ids(valueNameDict)
-        if suggest:
-            suggest_new_ids(valueNameDict, max(minVal, MIN_SUGGEST_IF_EMPTY))
-        if showBlocks:
-            show_id_blocks(valueNameDict)
+        handle_header_file(path, checkUnique, suggest, showBlocks, minVal)
 
 
 if __name__ == "__main__":
