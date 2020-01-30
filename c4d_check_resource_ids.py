@@ -1,7 +1,7 @@
 """
 Title:    C4D Check Resource IDs
 Author:   Frank Willeke
-Requires: Python 2.7 or Python 3
+Requires: Python 2.7
 
 Description:
     Parse one or multiple .h files from C4D resource folders and check therein
@@ -22,7 +22,7 @@ import itertools
 
 # Script metadata
 SCRIPT_TITLE = "C4D Resource ID Checker"
-SCRIPT_VERSION = "1.1"
+SCRIPT_VERSION = "1.2"
 SCRIPT_CREDITS = "2020 by Frank Willeke"
 
 # Script settings
@@ -42,7 +42,7 @@ def show_id_blocks(valueNameDict):
         """
         idValues = sorted(valueNameDict.keys())
         idBlocks = []
-        for _, g in itertools.groupby(enumerate(idValues), lambda (i,x):i-x):
+        for _, g in itertools.groupby(enumerate(idValues), lambda (i,x) : i-x):
             group = map(operator.itemgetter(1), g)
             idBlocks.append(group)
         return idBlocks
